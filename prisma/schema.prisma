@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Car {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  brand         String
+  model         String
+  variant       String
+  fuel          String
+  transmission  String
+  basePrice     Int
+  image         String
+  bodyStyle     String
+  seats         Int
+  opportunities Opportunity[]
+}
+
+model Opportunity {
+  id              String            @id @default(cuid())
+  carId           String
+  car             Car               @relation(fields: [carId], references: [id], onDelete: Cascade)
+  month           String
+  city            String
+  targetBuyers    Int               @default(40)
+  estimatedSaving Int
+  closingDate     DateTime
+  deliveryWindow  String
+  status          String            @default("OPEN")
+  requests        PurchaseRequest[]
+  createdAt       DateTime          @default(now())
+
+  @@unique([carId, month, city])
+}
+
+model PurchaseRequest {
+  id            String      @id @default(cuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  name          String
+  email         String
+  phone         String
+  city          String
+  sessionToken  String
+  createdAt     DateTime    @default(now())
+  status        String      @default("INTERESTED")
+
+  @@unique([opportunityId, email])
+  @@index([email])
+  @@index([sessionToken])
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String
+  sessionToken String
+  plan      String   @default("monthly")
+  status    String   @default("DEMO_ACTIVE")
+  createdAt DateTime @default(now())
+
+  @@index([sessionToken])
+}
